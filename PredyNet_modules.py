@@ -23,4 +23,23 @@ class PredyNet(torch.nn.Module):
 
         return err, ePrev, y, yPrev, Rec
 
+class PredyNet_LSTM(torch.nn.Module):
+    def __init__(self, inSize, dSize, hSize):
+        super(PredyNet_LSTM, self).__init__()
+        self.hSize = hSize
+
+        # LSTM gets error and action as input
+        lstm_input_size = inSize + dSize
+        self.RLayer = nn.LSTM(lstm_input_size, self.hSize)
+        self.PredLayer = nn.Linear(self.hSize, inSize)
+        self.hidden = self.init_hidden()
+
+    def init_hidden(self):
+        return (torch.randn(1, 1, self.hSize),
+                torch.randn(1, 1, self.hSize))
     
+    def forward(self, Input):
+        latent_pred, self.hidden = self.RLayer(Input.view(1, 1, -1), self.hidden)
+        pred = self.PredLayer(latent_pred.detach())
+
+        return pred
