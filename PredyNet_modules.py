@@ -40,6 +40,6 @@ class PredyNet_LSTM(torch.nn.Module):
     
     def forward(self, Input):
         latent_pred, self.hidden = self.RLayer(Input.view(1, 1, -1), self.hidden)
-        pred = self.PredLayer(latent_pred.detach())
+        pred = self.PredLayer(F.tanh(latent_pred.detach()))
 
         return pred
