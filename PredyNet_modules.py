@@ -43,3 +43,26 @@ class PredyNet_LSTM(torch.nn.Module):
         pred = self.PredLayer(F.tanh(latent_pred.detach()))
 
         return pred
+
+class action_LSTM(torch.nn.Module):
+    def __init__(self, inSize, dSize, hSize):
+        super(action_LSTM, self).__init__()
+        self.hSize = hSize
+
+        # LSTM gets error and action as input
+        # and an additional term for reward magnitude
+        lstm_input_size = inSize + dSize
+        self.RLayer = nn.LSTM(lstm_input_size, self.hSize)
+        self.PredLayer = nn.Linear(self.hSize, inSize)
+        self.actLayer = nn.Linear(self.hSize, dSize)
+        self.hidden = self.init_hidden()
+
+    def init_hidden(self):
+        return (torch.randn(1, 1, self.hSize),
+                torch.randn(1, 1, self.hSize))
+    
+    def forward(self, Input):
+        latent_pred, self.hidden = self.RLayer(Input.view(1, 1, -1), self.hidden)
+        pred = self.PredLayer(F.tanh(latent_pred.detach()))
+        act_pred = F.softmax(self.actLayer(latent_pred.detach()))
+        return pred, act_pred
